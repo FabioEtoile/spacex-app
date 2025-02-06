@@ -17,19 +17,11 @@
   </div>
 </template>
 
-<script lang="ts">
-import { defineComponent } from 'vue'
+<script setup lang="ts">
 import ProchainLancement from './components/ProchainLancement.vue'
 import ListeLancements from './components/ListeLancements.vue'
-
-export default defineComponent({
-  name: 'App',
-  components: {
-    ProchainLancement,
-    ListeLancements
-  }
-})
 </script>
+
 
 <style>
 html, body {
@@ -41,6 +33,7 @@ html, body {
 
 #app {
   min-height: 100vh;
+  
 }
 body {
   background-image: url('/src/assets/image.jpg');
@@ -50,3 +43,5 @@ body {
   background-repeat: no-repeat;
 }
 </style>
+
+

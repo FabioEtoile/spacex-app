@@ -1,50 +1,39 @@
-<script lang="ts">
-import { defineComponent, ref, onMounted, onUnmounted } from 'vue'
+<script setup lang="ts">
+import { ref, onMounted, onUnmounted } from 'vue'
 
 interface LancementProchain {
   name: string;
   date_utc: string;
 }
 
-export default defineComponent({
-  name: 'ProchainLancement',
-  setup() {
-    const lancementProchain = ref<LancementProchain | null>(null)
-    const compteRebours = ref<number>(0)
-    let timer: number | undefined
+const lancementProchain = ref<LancementProchain | null>(null)
+const compteRebours = ref<number>(0)
+let timer: number | undefined
 
-    function majCompteRebours() {
-      if (!lancementProchain.value) return
-      const dateLaunch = new Date(lancementProchain.value.date_utc).getTime()
-      const now = Date.now()
-      const diffSec = Math.floor((dateLaunch - now) / 1000)
-      compteRebours.value = diffSec > 0 ? diffSec : 0
-    }
+const majCompteRebours = () => {
+  if (!lancementProchain.value) return
+  const dateLaunch = new Date(lancementProchain.value.date_utc).getTime()
+  const now = Date.now()
+  const diffSec = Math.floor((dateLaunch - now) / 1000)
+  compteRebours.value = diffSec > 0 ? diffSec : 0
+}
 
-    function formaterDate(dateStr: string) {
-      const d = new Date(dateStr)
-      return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })
-    }
+const formaterDate = (dateStr: string) => {
+  const d = new Date(dateStr)
+  return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+}
 
-    onMounted(async () => {
-      const resp = await fetch('https://api.spacexdata.com/v5/launches/next')
-      const data: LancementProchain = await resp.json()
-      lancementProchain.value = data
+onMounted(async () => {
+  const resp = await fetch('https://api.spacexdata.com/v5/launches/next')
+  const data: LancementProchain = await resp.json()
+  lancementProchain.value = data
 
-      majCompteRebours()
-      timer = window.setInterval(majCompteRebours, 1000)
-    })
+  majCompteRebours()
+  timer = window.setInterval(majCompteRebours, 1000)
+})
 
-    onUnmounted(() => {
-      if (timer) clearInterval(timer)
-    })
-
-    return {
-      lancementProchain,
-      compteRebours,
-      formaterDate
-    }
-  }
+onUnmounted(() => {
+  if (timer) clearInterval(timer)
 })
 </script>
 
@@ -61,10 +50,9 @@ export default defineComponent({
     </div>
     <div v-else>
       <p>Chargement en cours...</p>
-      <div class="bg-black/50 backdrop-blur-md rounded-lg p-6 shadow-lg">
+      <div class="bg-black/50 backdrop-blur-md rounded-lg p-6 shadow-lg"></div>
     </div>
   </div>
-</div>
 </template>
 
 <style scoped></style>

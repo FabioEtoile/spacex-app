@@ -1,16 +1,14 @@
-<script lang="ts">
-import { defineComponent, ref, onMounted, computed, watch } from 'vue'
+<script setup lang="ts">
+import { ref, computed, watch, onMounted } from 'vue'
 
 interface Launchpad {
   name: string;
 }
-
 interface Payload {
   id: string;
   name: string;
   customers?: string[];
 }
-
 interface Lancement {
   id: string;
   name: string;
@@ -27,99 +25,74 @@ interface Lancement {
   launchpad?: string;
   payloads?: string[];
 }
+const props = defineProps<{ lancement: Lancement | null }>()
+const emit = defineEmits(['close'])
 
-export default defineComponent({
-  name: 'ModalLancement',
-  props: {
-    lancement: {
-      type: Object as () => Lancement | null,
-      required: true
-    }
-  },
-  emits: ['close'],
-  setup(props, { emit }) {
-    const afficherVideo = ref(false)
-    const nomLaunchpad = ref<string>('')
-    const payloads = ref<Payload[]>([])
-    const details = ref<string>('')
-    const article = ref<string>('')
+const afficherVideo = ref(false)
+const nomLaunchpad = ref<string>('')
+const payloads = ref<Payload[]>([])
+const details = ref<string>('')
+const article = ref<string>('')
 
-    const idYoutube = computed(() => {
-      const webcastUrl = props.lancement?.links?.webcast
-      if (!webcastUrl) return null
+const idYoutube = computed(() => {
+  const webcastUrl = props.lancement?.links?.webcast
+  if (!webcastUrl) return null
 
-      const shortMatch = webcastUrl.match(/youtu\.be\/([^?]+)/i)
-      if (shortMatch && shortMatch[1]) {
-        return shortMatch[1]
-      }
+  const shortMatch = webcastUrl.match(/youtu\.be\/([^?]+)/i)
+  if (shortMatch && shortMatch[1]) {
+    return shortMatch[1]
+  }
 
-      try {
-        const urlObj = new URL(webcastUrl)
-        return urlObj.searchParams.get('v')
-      } catch {
-        return null
-      }
-    })
-
-    const imageMission = computed(() => {
-      return props.lancement?.links?.patch?.small || ''
-    })
-
-    function formaterDate(dateStr: string) {
-      const d = new Date(dateStr)
-      return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })
-    }
-
-    function fermerModal() {
-      emit('close')
-    }
-
-    async function chargerDonnees() {
-      nomLaunchpad.value = ''
-      payloads.value = []
-      details.value = props.lancement?.details || 'Aucune information détaillée disponible.'
-      article.value = props.lancement?.links?.article || ''
-
-      if (props.lancement?.launchpad) {
-        try {
-          const repLaunchpad = await fetch(`https://api.spacexdata.com/v4/launchpads/${props.lancement.launchpad}`)
-          const dataLp: Launchpad = await repLaunchpad.json()
-          nomLaunchpad.value = dataLp.name
-        } catch (err) {
-          console.error('Erreur fetch launchpad :', err)
-        }
-      }
-
-      if (props.lancement?.payloads && Array.isArray(props.lancement.payloads)) {
-        for (const payloadId of props.lancement.payloads) {
-          try {
-            const repPayload = await fetch(`https://api.spacexdata.com/v4/payloads/${payloadId}`)
-            const dataPl: Payload = await repPayload.json()
-            payloads.value.push(dataPl)
-          } catch (err) {
-            console.error('Erreur fetch payload :', err)
-          }
-        }
-      }
-    }
-
-    onMounted(chargerDonnees)
-    watch(() => props.lancement, chargerDonnees, { deep: true })
-
-    return {
-      afficherVideo,
-      nomLaunchpad,
-      payloads,
-      details,
-      article,
-      idYoutube,
-      imageMission,
-      formaterDate,
-      fermerModal
-    }
+  try {
+    const urlObj = new URL(webcastUrl)
+    return urlObj.searchParams.get('v')
+  } catch {
+    return null
   }
 })
+
+const imageMission = computed(() => props.lancement?.links?.patch?.small || '')
+
+const formaterDate = (dateStr: string) => {
+  const d = new Date(dateStr)
+  return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+}
+
+const fermerModal = () => emit('close')
+
+const chargerDonnees = async () => {
+  nomLaunchpad.value = ''
+  payloads.value = []
+  details.value = props.lancement?.details || 'Aucune information détaillée disponible.'
+  article.value = props.lancement?.links?.article || ''
+
+  if (props.lancement?.launchpad) {
+    try {
+      const repLaunchpad = await fetch(`https://api.spacexdata.com/v4/launchpads/${props.lancement.launchpad}`)
+      const dataLp: Launchpad = await repLaunchpad.json()
+      nomLaunchpad.value = dataLp.name
+    } catch (err) {
+      console.error('Erreur fetch launchpad :', err)
+    }
+  }
+
+  if (props.lancement?.payloads && Array.isArray(props.lancement.payloads)) {
+    for (const payloadId of props.lancement.payloads) {
+      try {
+        const repPayload = await fetch(`https://api.spacexdata.com/v4/payloads/${payloadId}`)
+        const dataPl: Payload = await repPayload.json()
+        payloads.value.push(dataPl)
+      } catch (err) {
+        console.error('Erreur fetch payload :', err)
+      }
+    }
+  }
+}
+
+onMounted(chargerDonnees)
+watch(() => props.lancement, chargerDonnees, { deep: true })
 </script>
+
 <template>
   <div class="fixed inset-0 bg-black/50 flex justify-end items-center z-50 p-4">
     <div class="relative bg-white p-8 rounded-lg shadow-lg max-w-4xl w-full mx-auto flex flex-col items-start text-left">
@@ -145,15 +118,15 @@ export default defineComponent({
 
       <!-- Détails du lancement -->
       <div class="mb-4">
-      <strong class="text-lg">📜 Détails :</strong>
-       <p class="text-gray-700">{{ details }}</p>
+        <strong class="text-lg">📜 Détails :</strong>
+        <p class="text-gray-700">{{ details }}</p>
       </div>
 
       <!-- Lien vers l'article -->
       <div v-if="article" class="mb-4">
-      <a :href="article" target="_blank" class="text-blue-600 underline text-lg font-semibold">
-      🔗 Lire l'article
-      </a>
+        <a :href="article" target="_blank" class="text-blue-600 underline text-lg font-semibold">
+          🔗 Lire l'article
+        </a>
       </div>
       <p v-else class="mb-4 text-gray-500 text-lg">Aucun article disponible.</p><br>
 
@@ -197,9 +170,7 @@ export default defineComponent({
   </div>
 </template>
 
-
 <style scoped>
-
 ul {
   text-align: center;
 }
@@ -211,5 +182,4 @@ a {
 a:hover {
   color: #0056b3; 
 }
-
 </style>
